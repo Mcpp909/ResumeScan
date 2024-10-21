@@ -1,0 +1,107 @@
+"use client"
+
+import { useState } from "react"
+import { Check, X, Upload, RefreshCw } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+// Mock function to simulate resume analysis
+const analyzeResumes = async (files: File[]) => {
+  // Simulating API call
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  
+  return files.map((file, index) => ({
+    id: index + 1,
+    name: file.name,
+    successful: Math.random() > 0.5,
+    email: `candidate${index + 1}@example.com`,
+    phone: `+1 (555) ${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+  }))
+}
+
+export default function ResumeScreener() {
+  const [resumes, setResumes] = useState<File[]>([])
+  const [results, setResults] = useState<any[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setResumes(Array.from(event.target.files))
+    }
+  }
+
+  const handleAnalysis = async () => {
+    setIsAnalyzing(true)
+    const analysisResults = await analyzeResumes(resumes)
+    setResults(analysisResults)
+    setIsAnalyzing(false)
+  }
+
+  return (
+    <div className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-4">Resume Screening Application</h1>
+      
+      <div className="mb-4">
+        <Input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          multiple
+          onChange={handleFileUpload}
+          className="mb-2"
+        />
+        <p className="text-sm text-gray-500 mb-2">
+          {resumes.length} {resumes.length === 1 ? 'resume' : 'resumes'} selected
+        </p>
+        <Button
+          onClick={handleAnalysis}
+          disabled={resumes.length === 0 || isAnalyzing}
+          className="w-full"
+        >
+          {isAnalyzing ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing Resumes...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Analyze Resumes
+            </>
+          )}
+        </Button>
+      </div>
+
+      {results.length > 0 && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {results.map((result) => (
+              <TableRow key={result.id}>
+                <TableCell>{result.id}</TableCell>
+                <TableCell>{result.name}</TableCell>
+                <TableCell>
+                  {result.successful ? (
+                    <Check className="text-green-500" />
+                  ) : (
+                    <X className="text-red-500" />
+                  )}
+                </TableCell>
+                <TableCell>{result.successful ? result.email : "-"}</TableCell>
+                <TableCell>{result.successful ? result.phone : "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  )
+}
